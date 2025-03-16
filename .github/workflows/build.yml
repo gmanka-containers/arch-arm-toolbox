@@ -6,43 +6,48 @@ on:
   schedule:
     - cron: '0 7 * * *'
 jobs:
-  build-push:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - name: login to dockerhub
-        uses: docker/login-action@v3
+      - id: tags
+        run: |
+          echo "tags=latest $(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+      - run: |
+          sudo apt update -y
+          sudo apt install -y qemu-user-static
+      - uses: redhat-actions/buildah-build@v2
         with:
-          registry: docker.io
-          username: gmanka
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: login to ghcr.io
-        uses: docker/login-action@v3
+          image: arch-arm-toolbox
+          tags: ${{ steps.tags.outputs.tags }}
+          platforms: linux/amd64, linux/arm64, linux/riscv64, linux/arm/v7
+          containerfiles: |
+            Containerfile
+      - name: quay.io
+        uses: redhat-actions/push-to-registry@v2
         with:
-          registry: ghcr.io
-          username: gmankab
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: login to quay
-        uses: docker/login-action@v3
-        with:
-          registry: quay.io
+          image: arch-arm-toolbox
+          tags: ${{ steps.tags.outputs.tags }}
+          registry: quay.io/gmanka
           username: gmankab
           password: ${{ secrets.QUAY_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - name: docker.io
+        uses: redhat-actions/push-to-registry@v2
         with:
-          context: .
-          file: Containerfile
-          platforms: linux/amd64,linux/arm/v7,linux/arm64,linux/riscv64
-          push: true
-          tags: |
-            quay.io/gmanka/arch-arm-toolbox:latest
-            docker.io/gmanka/arch-arm-toolbox:latest
-            ghcr.io/gmanka-containers/arch-arm-toolbox:latest
+          image: arch-arm-toolbox
+          tags: ${{ steps.tags.outputs.tags }}
+          registry: docker.io/gmanka
+          username: gmanka
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: ghcr.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: arch-arm-toolbox
+          tags: ${{ steps.tags.outputs.tags }}
+          registry: ghcr.io/gmanka-containers
+          username: gmankab
+          password: ${{ secrets.GITHUB_TOKEN }}
 
