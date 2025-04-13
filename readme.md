@@ -23,6 +23,6 @@ toolbox create --image quay.io/gmanka/arch-arm-toolbox:latest
 ### how to use with distrobox
 
 ```shell
-toolbox create --image quay.io/gmanka/arch-arm-toolbox:latest
+distrobox create --image quay.io/gmanka/arch-arm-toolbox:latest
 ```
 
