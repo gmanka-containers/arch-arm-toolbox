@@ -12,16 +12,13 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - id: tags
-        run: |
-          echo "tags=latest $(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - run: |
           sudo apt update -y
           sudo apt install -y qemu-user-static
       - uses: redhat-actions/buildah-build@v2
         with:
           image: arch-arm-toolbox
-          tags: ${{ steps.tags.outputs.tags }}
+          tags: latest
           platforms: linux/amd64, linux/arm64, linux/riscv64, linux/arm/v7
           containerfiles: |
             Containerfile
@@ -29,7 +26,7 @@ jobs:
         uses: redhat-actions/push-to-registry@v2
         with:
           image: arch-arm-toolbox
-          tags: ${{ steps.tags.outputs.tags }}
+          tags: latest
           registry: quay.io/gmanka
           username: gmankab
           password: ${{ secrets.QUAY_TOKEN }}
