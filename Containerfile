@@ -8,19 +8,18 @@ LABEL com.github.containers.toolbox="true" \
       maintainer="gmanka https://github.com/gmanka-containers"
 
 # Install extra packages
-COPY extra-packages /
-RUN pacman -Syu --needed --noconfirm - < extra-packages
-RUN rm /extra-packages
+RUN --mount=type=cache,target=/var/cache/pacman/pkg \
+    --mount=type=cache,target=/var/lib/pacman/sync \
+    --mount=type=bind,source=extra-packages,target=/extra-packages,ro,z \
+    pacman --disable-sandbox -Syu --needed --noconfirm < extra-packages
 
 # Enable man pages, enable progress bars
 RUN sed -i -e 's/NoProgressBar/#NoProgressBar/' -e 's/NoExtract/#NoExtract/' /etc/pacman.conf
 
 # Force reinstall of packages which have man pages (shouldn't redownload any that were just upgraded)
-RUN mkdir -p /usr/share/man && pacman -Qo /usr/share/man | awk '{print $5}' | xargs pacman -S --noconfirm man-db
-
-# Clean up cache
-RUN yes | pacman -Scc
+RUN --mount=type=cache,target=/var/cache/pacman/pkg \
+    --mount=type=cache,target=/var/lib/pacman/sync \
+    mkdir -p /usr/share/man && pacman -Qo /usr/share/man | awk '{print $5}' | xargs pacman --disable-sandbox -S --noconfirm man-db
 
 # Enable sudo permission for wheel users
 RUN echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
-
