@@ -33,20 +33,3 @@ jobs:
           registry: quay.io/gmanka
           username: gmankab
           password: ${{ secrets.QUAY_TOKEN }}
-      - name: docker.io
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: arch-arm-toolbox
-          tags: ${{ steps.tags.outputs.tags }}
-          registry: docker.io/gmanka
-          username: gmanka
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: ghcr.io
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: arch-arm-toolbox
-          tags: ${{ steps.tags.outputs.tags }}
-          registry: ghcr.io/gmanka-containers
-          username: gmankab
-          password: ${{ secrets.GITHUB_TOKEN }}
-
